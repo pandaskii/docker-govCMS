@@ -31,8 +31,22 @@ ADD src/policy-rc.d /usr/sbin/policy-rc.d
 
 ####################  BEGIN INSTALLATION  ####################
 
+# INSTALL MySQL
+# set installation parameters to prevent the installation script from asking
+RUN { \
+		echo "mysql-server-5.5 mysql-server/root_password password $MYSQL_ROOT_PASSWORD"; \
+		echo "mysql-server-5.5 mysql-server/root_password_again password $MYSQL_ROOT_PASSWORD"; \
+	} | debconf-set-selections \
+	&& apt-get update && apt-get install -y mysql-server
+
+# comment out a few problematic configuration values
+# don't reverse lookup hostnames, they are usually another container
+RUN sed -Ei 's/^(bind-address|log)/#&/' /etc/mysql/my.cnf \
+	&& echo 'skip-host-cache\nskip-name-resolve' | awk '{ print } $1 == "[mysqld]" && c == 0 { c = 1; system("cat") }' /etc/mysql/my.cnf > /tmp/my.cnf \
+	&& mv /tmp/my.cnf /etc/mysql/my.cnf
+
 # OS update and upgrade
-RUN apt-get update -y && apt-get install -y libpng12-dev libjpeg-dev libpq-dev supervisor openssl htop \
+RUN apt-get install -y libpng12-dev libjpeg-dev libpq-dev supervisor openssl htop \
     curl wget postfix sudo rsync git-core unzip nano python-software-properties \
     apache2 php5 php5-cli php5-gd php5-mcrypt libapache2-mod-php5 php-pear php5-mysql \
     && rm -rf /var/lib/apt/lists/*
@@ -41,22 +55,6 @@ RUN apt-get autoclean
 # Configure apache
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 RUN a2dismod mpm_event && a2enmod mpm_prefork && a2enmod rewrite
-
-# INSTALL MySQL
-# set installation parameters to prevent the installation script from asking
-RUN { \
-		echo "mysql-server-5.5 mysql-server/root_password password $MYSQL_ROOT_PASSWORD"; \
-		echo "mysql-server-5.5 mysql-server/root_password_again password $MYSQL_ROOT_PASSWORD"; \
-	} | debconf-set-selections \
-	&& apt-get update && apt-get install -y mysql-server \
-    && rm -rf /var/lib/apt/lists/*
-RUN apt-get autoclean
-
-# comment out a few problematic configuration values
-# don't reverse lookup hostnames, they are usually another container
-RUN sed -Ei 's/^(bind-address|log)/#&/' /etc/mysql/my.cnf \
-	&& echo 'skip-host-cache\nskip-name-resolve' | awk '{ print } $1 == "[mysqld]" && c == 0 { c = 1; system("cat") }' /etc/mysql/my.cnf > /tmp/my.cnf \
-	&& mv /tmp/my.cnf /etc/mysql/my.cnf
 
 # INSTALL COMPOSER
 RUN bash -c "curl -sS 'https://getcomposer.org/installer' | php -- --install-dir=/usr/local/bin --filename=composer"
