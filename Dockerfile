@@ -55,6 +55,7 @@ RUN apt-get autoclean
 # Configure apache
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 RUN a2enmod rewrite
+RUN a2enmod ssl
 COPY config/govcms.conf /etc/apache2/sites-available/
 RUN a2dissite 000-default
 RUN a2ensite govcms
