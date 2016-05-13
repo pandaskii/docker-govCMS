@@ -100,5 +100,4 @@ EXPOSE 443
 EXPOSE 3306
 
 # Execut the pandastix_docker_run.sh
-CMD ["/pandastix_docker_drush.sh"]
 CMD ["/pandastix_docker_run.sh"]
