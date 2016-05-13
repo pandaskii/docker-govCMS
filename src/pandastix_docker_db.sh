@@ -4,12 +4,10 @@
 #    Docker Pandastix
 #
 #===============================================================================
-VOLUME_HOME="/var/lib/mysql"
-
-if [[ ! -d $VOLUME_HOME/mysql ]]; then
-    mysql_install_db > /dev/null 2>&1
-    /pandastix_docker_db.sh
-fi
-
-exec supervisord -n
+echo "Creating Database"
+mysql -h localhost -u root <<EOF
+CREATE DATABASE `govcms` CHARACTER SET utf8 COLLATE utf8_general_ci;
+GRANT ALL ON `govcms`.* TO `govcms`@localhost IDENTIFIED BY 'govcms';
+FLUSH PRIVILEGES;
+EOF
 #===============================================================================
