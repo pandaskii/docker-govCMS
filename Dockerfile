@@ -79,12 +79,13 @@ RUN curl -fSL "https://ftp.drupal.org/files/projects/govcms-${GOVCMS_VERSION}-co
 	&& rm govcms.tar.gz \
 	&& chown -R www-data:www-data sites/default
 
+RUN drush -dv -y site-install govcms --db-url=mysql://root:root@localhost:3306/govcms	
+
 ##################### ADD SUPPORT FILES #####################
 
 ADD src/pandastix_docker_apache.sh /pandastix_docker_apache.sh
 ADD src/pandastix_docker_mysql.sh /pandastix_docker_mysql.sh
 ADD src/pandastix_docker_db.sh /pandastix_docker_db.sh
-ADD src/pandastix_docker_drush.sh /pandastix_docker_drush.sh
 ADD src/pandastix_docker_supervisor.conf /etc/supervisor/conf.d/pandastix_docker_supervisor.conf
 ADD src/pandastix_docker_run.sh /pandastix_docker_run.sh
 
@@ -100,5 +101,4 @@ EXPOSE 443
 EXPOSE 3306
 
 # Execut the pandastix_docker_run.sh
-CMD ["/pandastix_docker_drush.sh"]
 CMD ["/pandastix_docker_run.sh"]
