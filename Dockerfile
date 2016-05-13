@@ -38,12 +38,7 @@ RUN { \
 		echo "mysql-server-5.5 mysql-server/root_password_again password $MYSQL_ROOT_PASSWORD"; \
 	} | debconf-set-selections \
 	&& apt-get update && apt-get install -y mysql-server
-
-# comment out a few problematic configuration values
-# don't reverse lookup hostnames, they are usually another container
-RUN sed -Ei 's/^(bind-address|log)/#&/' /etc/mysql/my.cnf \
-	&& echo 'skip-host-cache\nskip-name-resolve' | awk '{ print } $1 == "[mysqld]" && c == 0 { c = 1; system("cat") }' /etc/mysql/my.cnf > /tmp/my.cnf \
-	&& mv /tmp/my.cnf /etc/mysql/my.cnf
+COPY config/my.cnf /etc/mysql/
 
 # OS update and upgrade
 RUN apt-get install -y supervisor openssl htop curl wget postfix sudo rsync git-core unzip nano \
@@ -51,6 +46,7 @@ RUN apt-get install -y supervisor openssl htop curl wget postfix sudo rsync git-
     php5-mysql \
     && rm -rf /var/lib/apt/lists/*
 RUN apt-get autoclean
+COPY config/php.ini /etc/php5/apache2/
 
 # Configure apache
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
